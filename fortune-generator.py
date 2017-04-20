@@ -7,10 +7,9 @@ from subprocess import call
 import os
 
 try:
-    import account_keys
-    import consumer_keys
+    import keys
 except ImportError:
-    print("Keys not found. do you have the proper account-keys and consumer-keys files?")
+    print("Keys not found. do you have the proper key file?")
     sys.exit(1)
 
 try:
