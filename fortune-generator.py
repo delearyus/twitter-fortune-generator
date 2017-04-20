@@ -77,6 +77,8 @@ for i in filteredstatuses:
     datfile.write(i)
     datfile.write("\n%\n")
 
+datfile.close()
+
 #-----------------------------------------------------------------------------#
 
 call(["strfile", "-c", "%", datfile.name, datfile.name + ".dat"])
