@@ -26,10 +26,10 @@ if os.geteuid() != 0:
 
 #-----------------------------------------------------------------------------#
 
-api = twitter.Api(consumer_key=consumer_keys.consumer_key,
-                  consumer_secret=consumer_keys.consumer_secret,
-                  access_token_key=account_keys.access_token,
-                  access_token_secret=account_keys.access_secret)
+api = twitter.Api(consumer_key=keys.consumer_key,
+                  consumer_secret=keys.consumer_secret,
+                  access_token_key=keys.access_token,
+                  access_token_secret=keys.access_secret)
 
 statuses = set()
 screen_name = 'QuietPineTrees'
