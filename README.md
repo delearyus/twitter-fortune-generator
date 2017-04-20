@@ -3,6 +3,6 @@ Generates linux fortune files from tweets
 
 ## IMPORTANT NOTE:
 
-this program will not work on its own due to the nature of the twitter API.  It
-requires an additional file, `account_keys.py`, which contains string values
-`access_token` and `access_secret`.  These keys can be obtained from twitter
+this program will not work on its own due to the nature of the twitter API. It
+is necessary to register your own version of the program from apps.twitter.com
+and run the `keygen.py` script before the first use of the program.
