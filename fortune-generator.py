@@ -109,19 +109,22 @@ datfile.close()
 
 call(["strfile", "-c", "%", datfile.name, datfile.name + ".dat"])
 
+if not os.path.exists("/usr/local/share/fortune"):
+    os.makedir("/usr/local/share/fortune")
+
 try:
-    os.remove("/usr/share/fortune/" + datfile.name)
+    os.remove("/usr/local/share/fortune/" + datfile.name)
 except FileNotFoundError:
     print("fortune file not found, not deleting it")
 
 try:
-    os.remove("/usr/share/fortune/" + datfile.name + ".dat")
+    os.remove("/usr/local/share/fortune/" + datfile.name + ".dat")
 except FileNotFoundError:
     print("dat file not found, not deleting it")
 
 
-shutil.move(datfile.name, "/usr/share/fortune")
-shutil.move(datfile.name + ".dat", "/usr/share/fortune")
+shutil.move(datfile.name, "/usr/local/share/fortune")
+shutil.move(datfile.name + ".dat", "/usr/local/share/fortune")
 
 print("files installed successfully!")
 print("use fortune {} to generate fortunes".format(datfile.name))
