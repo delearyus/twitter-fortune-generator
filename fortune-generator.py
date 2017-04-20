@@ -32,7 +32,7 @@ api = twitter.Api(consumer_key=keys.consumer_key,
                   access_token_secret=keys.access_secret)
 
 statuses = set()
-screen_name = 'QuietPineTrees'
+screen_name = 'dril'
 
 temp = ["placeholder"]
 oldestid = 1000000000000000000
@@ -41,9 +41,14 @@ oldestid = 1000000000000000000
 
 while (len(temp) > 0):
 
-    temp = api.GetUserTimeline(screen_name=screen_name,
-                               trim_user=True,
-                               max_id=oldestid)
+    try:
+        temp = api.GetUserTimeline(screen_name=screen_name,
+                                   trim_user=True,
+                                   max_id=oldestid)
+    except TwitterError:
+        print("Request failed, retrying in 5s.")
+        time.sleep(5)
+        continue
 
     print("Got {} tweets after id {}".format(len(temp), oldestid))
     oldestid = min([s.id for s in temp], default=2) - 1
