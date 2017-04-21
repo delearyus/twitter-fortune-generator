@@ -21,12 +21,6 @@ except ImportError:
     print("python-twitter not found, install with pip install python-twitter")
     sys.exit(1)
 
-#----[ Privelege Check ]------------------------------------------------------#
-
-if os.geteuid() != 0:
-    print("This script needs to be run as root.")
-    sys.exit(1)
-
 #----[ Arg parsing ]----------------------------------------------------------#
 
 parser = argparse.ArgumentParser()
@@ -46,6 +40,12 @@ parser.add_argument("-v","--verbose",
                     action="store_true")
 
 args = parser.parse_args()
+
+#----[ Privelege Check ]------------------------------------------------------#
+
+if os.geteuid() != 0:
+    print("This script needs to be run as root.")
+    sys.exit(1)
 
 #----[ Api initialization ]---------------------------------------------------#
 
