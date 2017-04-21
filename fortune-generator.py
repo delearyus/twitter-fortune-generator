@@ -6,11 +6,13 @@ import shutil
 from subprocess import call
 import os
 import argparse
+from requests import ConnectionError
 
 try:
     import keys
 except ImportError:
     print("Keys not found. do you have the proper key file?")
+    print("If not, register this app with twitter and run `keygen.py`")
     sys.exit(1)
 
 try:
@@ -39,6 +41,10 @@ parser.add_argument("-m","--nomentions",
                     help="filter out tweets with mentions",
                     action="store_true")
 
+parser.add_argument("-v","--verbose",
+                    help="show more information",
+                    action="store_true")
+
 args = parser.parse_args()
 
 #----[ Api initialization ]---------------------------------------------------#
@@ -48,13 +54,39 @@ api = twitter.Api(consumer_key=keys.consumer_key,
                   access_token_key=keys.access_token,
                   access_token_secret=keys.access_secret)
 
+try:
+    api.VerifyCredentials()
+except twitter.TwitterError as e:
+    if e.message[0]['code'] == 89:
+        print("Error: Invalid credentials. "
+        "Make sure that your keys are stored correctly.")
+        sys.exit(1)
+    else:
+        print("Error with authentication: code {}".format(e.message[0]['code']))
+        print("Message: {}".format(e.message[0]['message']))
+        sys.exit(1)
+except ConnectionError as e: 
+    print("Connection Error: Check your internet connection.")
+    sys.exit(1)
+
 statuses = set()
 screen_name = args.screen_name
 
-temp = ["placeholder"]
+temp = [None]
 oldestid = 1000000000000000000
 
 #----[ Api call loop ]--------------------------------------------------------#
+
+def progressbar(idnumber):
+    percent = idnumber // 10000000000000000
+    bars = 100 - percent
+    return "[{}]\r".format(("=" * bars) + (" " * percent))
+
+print("Beginning scan for tweets...")
+
+if not args.verbose:
+    print("Scan generally finishes before the progress bar does, "
+          "depending on how long the user has been active on twitter.")
 
 while (len(temp) > 0):
 
@@ -62,36 +94,45 @@ while (len(temp) > 0):
         temp = api.GetUserTimeline(screen_name=screen_name,
                                    trim_user=True,
                                    max_id=oldestid)
-    except TwitterError:
+    except twitter.TwitterError:
         print("Request failed, retrying in 5s.")
         time.sleep(5)
         continue
 
-    print("Got {} tweets after id {}".format(len(temp), oldestid))
+    if args.verbose:
+        print("Got {} tweets after id {}".format(len(temp), oldestid))
+    else:
+        print(progressbar(oldestid),end="")
     oldestid = min([s.id for s in temp], default=2) - 1
 
     for i in temp:
         statuses.add(i.text)
 
+if not args.verbose:
+    print()
+
 print("finished!")
 
-print("Found a total of {} unique statuses".format(len(statuses)))
+if args.verbose:
+    print("Found a total of {} unique statuses".format(len(statuses)))
 
 #----[ Filtering ]------------------------------------------------------------#
 
 if args.nolinks:
     filteredstatuses = {x for x in statuses if "http" not in x}
 
-    text = "Filtered out {} statuses with embedded links"
-    print(text.format(len(statuses) - len(filteredstatuses)))
+    if args.verbose:
+        text = "Filtered out {} statuses with embedded links"
+        print(text.format(len(statuses) - len(filteredstatuses)))
 
     statuses = filteredstatuses
 
 if args.nomentions:
     filteredstatuses = {x for x in statuses if "@" not in x}
 
-    text = "Filtered out {} statuses with mentions"
-    print(text.format(len(statuses) - len(filteredstatuses)))
+    if args.verbose:
+        text = "Filtered out {} statuses with mentions"
+        print(text.format(len(statuses) - len(filteredstatuses)))
     
     statuses = filteredstatuses
 
@@ -107,7 +148,15 @@ datfile.close()
 
 #----[ Datfile Generation and Installation ]----------------------------------#
 
-call(["strfile", "-c", "%", datfile.name, datfile.name + ".dat"])
+if args.verbose:
+    call(["strfile", "-c", "%", datfile.name, datfile.name + ".dat"])
+else:
+    devnull = open(os.devnull, 'w')
+    call(["strfile", "-c", "%", datfile.name, datfile.name + ".dat"],
+            stdout=devnull,
+            stderr=devnull)
+    devnull.close()
+
 
 if not os.path.exists("/usr/local/share/fortune"):
     os.makedir("/usr/local/share/fortune")
@@ -126,5 +175,8 @@ except FileNotFoundError:
 shutil.move(datfile.name, "/usr/local/share/fortune")
 shutil.move(datfile.name + ".dat", "/usr/local/share/fortune")
 
-print("files installed successfully!")
-print("use fortune {} to generate fortunes".format(datfile.name))
+if args.verbose:
+    print("files installed successfully!")
+
+print("found a total of {} tweets after filtering".format(len(statuses)))
+print("use 'fortune {}' to generate fortunes".format(datfile.name))
