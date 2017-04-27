@@ -7,6 +7,7 @@ from subprocess import call
 import os
 import argparse
 from requests import ConnectionError
+import html
 
 try:
     import keys
@@ -37,6 +38,10 @@ parser.add_argument("-m","--nomentions",
 
 parser.add_argument("-v","--verbose",
                     help="show more information",
+                    action="store_true")
+
+parser.add_argument("-u","--unescape",
+                    help="unescape html-encoding",
                     action="store_true")
 
 args = parser.parse_args()
@@ -134,6 +139,15 @@ if args.nomentions:
         text = "Filtered out {} statuses with mentions"
         print(text.format(len(statuses) - len(filteredstatuses)))
     
+    statuses = filteredstatuses
+
+if args.unescape:
+    filteredstatuses = {html.unescape(x) for x in statuses}
+
+    if args.verbose:
+        text = "html de-encoded statuses"
+        print(text)
+
     statuses = filteredstatuses
 
 #----[ File Output ]----------------------------------------------------------#
